@@ -35,6 +35,7 @@ app.use(
   morgan(' :method :url :status :res[content-length] - :response-time ms :body')
 );
 
+//Registration
 app.post('/users/register', async (req, res) => {
   try {
     const { email, name, password } = req.body;
@@ -51,6 +52,7 @@ app.post('/users/register', async (req, res) => {
   }
 });
 
+//Login
 app.post('/users/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -81,6 +83,7 @@ app.post('/users/login', async (req, res) => {
   }
 });
 
+//Logout
 app.post('/users/logout', (req, res) => {
   const refreshToken = req.body.token;
   if (!refreshToken) {
@@ -91,6 +94,20 @@ app.post('/users/logout', (req, res) => {
   }
   REFRESHTOKENS = REFRESHTOKENS.filter((token) => token !== req.body.token);
   res.status(200).send('User Logged Out Successfully');
+});
+
+
+app.post('/users/token', (req, res) => {
+  const refreshToken = req.body.token;
+  if (refreshToken == null)
+    return res.status(401).send('Refresh Token Required');
+  if (!REFRESHTOKENS.includes(refreshToken))
+    return res.status(403).send('Invalid Refresh Token');
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    const accessToken = generateAccessToken(user);
+    res.json({ accessToken: accessToken });
+  });
 });
 
 app.use(express.static('client/build'));
