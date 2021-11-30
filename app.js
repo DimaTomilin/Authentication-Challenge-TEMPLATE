@@ -70,7 +70,6 @@ app.post('/users/login', async (req, res) => {
           process.env.REFRESH_TOKEN_SECRET
         );
         REFRESHTOKENS.push(refreshToken);
-        console.log(REFRESHTOKENS);
         res.json({
           accessToken: accessToken,
           refreshToken: refreshToken,
@@ -124,11 +123,18 @@ app.post('/users/token', (req, res) => {
     return res.status(401).send('Refresh Token Required');
   if (!REFRESHTOKENS.includes(refreshToken))
     return res.status(403).send('Invalid Refresh Token');
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    const accessToken = generateAccessToken(user);
-    res.json({ accessToken: accessToken });
-  });
+  jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+    (err, { email, password }) => {
+      if (err) return res.sendStatus(403);
+      const accessToken = generateAccessToken({
+        email,
+        password,
+      });
+      res.json({ accessToken: accessToken });
+    }
+  );
 });
 
 app.use(express.static('client/build'));
