@@ -14,6 +14,7 @@ const {
   errorHandlerMiddleware,
   unknownEndpoint,
 } = require('./middleware/errorHandler');
+const { authToken } = require('./middleware/tokenValidation');
 
 const USERS = [
   {
@@ -45,7 +46,7 @@ app.post('/users/register', async (req, res) => {
     const hashedPassword = await encryption(password);
     const newUser = { email, name, password: hashedPassword, isAdmin: false };
     USERS.push(newUser);
-    INFORMATION.push({ email, info: `${name} info` });
+    INFORMATION.push({ email: email, info: `${name} info` });
     res.status(201).send('Register Success');
   } catch {
     res.status(500).send('Server error');
@@ -69,6 +70,7 @@ app.post('/users/login', async (req, res) => {
           process.env.REFRESH_TOKEN_SECRET
         );
         REFRESHTOKENS.push(refreshToken);
+        console.log(REFRESHTOKENS);
         res.json({
           accessToken: accessToken,
           refreshToken: refreshToken,
@@ -96,6 +98,7 @@ app.post('/users/logout', (req, res) => {
   res.status(200).send('User Logged Out Successfully');
 });
 
+//Check token
 app.post('/users/tokenValidate', (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader.split(' ')[1];
@@ -108,6 +111,13 @@ app.post('/users/tokenValidate', (req, res) => {
   });
 });
 
+app.get('/api/v1/information', authToken, (req, res) => {
+  const { email } = req.user;
+  const info = INFORMATION.find((file) => file.email === email).info;
+  res.send([{ email }, { info }]);
+});
+
+//Refresh token
 app.post('/users/token', (req, res) => {
   const refreshToken = req.body.token;
   if (refreshToken == null)
