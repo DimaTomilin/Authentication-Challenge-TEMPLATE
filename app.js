@@ -96,6 +96,17 @@ app.post('/users/logout', (req, res) => {
   res.status(200).send('User Logged Out Successfully');
 });
 
+app.post('/users/tokenValidate', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader.split(' ')[1];
+
+  if (token === null) return res.status(401).send('Access Token Required');
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) return res.status(403).send('Invalid Access Token');
+    res.send({ valid: true });
+  });
+});
 
 app.post('/users/token', (req, res) => {
   const refreshToken = req.body.token;
