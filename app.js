@@ -24,7 +24,7 @@ const USERS = [
     isAdmin: true,
   },
 ];
-const INFORMATION = [{ email: '1111', info: '23213' }];
+const INFORMATION = [{ email: 'admin@email.com', info: 'admin info' }];
 let REFRESHTOKENS = [];
 
 app.use(express.json());
@@ -114,6 +114,15 @@ app.get('/api/v1/information', authToken, (req, res) => {
   const { email } = req.user;
   const info = INFORMATION.find((file) => file.email === email).info;
   res.send([{ email }, { info }]);
+});
+
+app.get('/api/v1/users', authToken, (req, res) => {
+  const { email, password } = req.user;
+  const user = USERS.find((file) => file.email === email);
+  if (!user.isAdmin) {
+    return res.status(403).send('Invalid Access Token');
+  }
+  res.send({ users: USERS });
 });
 
 //Refresh token
